@@ -42,3 +42,7 @@ spec:
             failureThreshold: 3
           securityContext:
             allowPrivilegeEscalation: false
+          lifecycle:
+            preStop:
+              exec:
+                command: ["sleep", "10"]
