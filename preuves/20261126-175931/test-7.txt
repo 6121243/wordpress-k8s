@@ -1,0 +1,13 @@
+=== Test 7 : Suppression du pod WordPress -> recréation automatique
+=== 2026-11-26 17:59:31 UTC — test@k8smaster
+
+NAME                        READY   STATUS    RESTARTS   AGE   IP           NODE         NOMINATED NODE   READINESS GATES
+wordpress-bf89954c6-77rx2   1/1     Running   0          25m   10.244.8.1   k8sworker2   <none>           <none>
+Suppression de pod/wordpress-bf89954c6-77rx2
+pod "wordpress-bf89954c6-77rx2" deleted from wordpress namespace
+NAME                        READY   STATUS    RESTARTS   AGE   IP           NODE         NOMINATED NODE   READINESS GATES
+wordpress-bf89954c6-q7h47   1/1     Running   0          3s    10.244.8.3   k8sworker2   <none>           <none>
+deployment "wordpress" successfully rolled out
+NAME                        READY   STATUS    RESTARTS   AGE   IP           NODE         NOMINATED NODE   READINESS GATES
+wordpress-bf89954c6-q7h47   1/1     Running   0          3s    10.244.8.3   k8sworker2   <none>           <none>
+HTTP 200 sur http://10.30.20.10:30080

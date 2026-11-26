@@ -1,0 +1,14 @@
+=== Test 4 : Persistance : contenu conservé après recréation du pod MySQL
+=== 2026-11-26 17:57:55 UTC — test@k8smaster
+
+Dans WordPress (wp-admin), publiez un article intitulé : Test persistance
+Appuyez sur Entrée quand c'est fait... --- AVANT suppression :
+8	TEST PERSISTANCE TAM TAM	2026-11-26 18:50:13
+Pod actuel : pod/mysql-8c887c697-8h9q2
+pod "mysql-8c887c697-8h9q2" deleted from wordpress namespace
+deployment "mysql" successfully rolled out
+pod/mysql-8c887c697-cblht condition met
+Nouveau pod : pod/mysql-8c887c697-cblht
+--- APRÈS recréation :
+8	TEST PERSISTANCE TAM TAM	2026-11-26 18:50:13
+HTTP 200 sur http://10.30.20.10:30080
