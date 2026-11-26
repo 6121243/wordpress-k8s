@@ -1,0 +1,61 @@
+# PersistentVolumes NFS (statiques).
+# Gabarit : __NFS_SERVER__ et __NFS_PATH__ sont remplacés par scripts/deploy.sh
+# à partir de inventory.conf.
+#
+# Pourquoi NFS ? Le volume n'est pas attaché à un nœud précis : si le pod
+# MySQL ou WordPress est recréé sur un autre worker, il retrouve ses données.
+# Retain : supprimer la PVC ne supprime jamais les données sur le serveur NFS.
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: wp-mysql-pv
+  labels:
+    app.kubernetes.io/part-of: wordpress-k8s
+    volume: mysql
+spec:
+  capacity:
+    storage: 5Gi
+  accessModes: ["ReadWriteOnce"]
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: nfs-static
+  mountOptions: ["nfsvers=4.1"]
+  nfs:
+    server: __NFS_SERVER__
+    path: __NFS_PATH__/mysql
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: wp-content-pv
+  labels:
+    app.kubernetes.io/part-of: wordpress-k8s
+    volume: wp-content
+spec:
+  capacity:
+    storage: 5Gi
+  # ReadWriteMany : plusieurs pods WordPress peuvent partager wp-content
+  accessModes: ["ReadWriteMany"]
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: nfs-static
+  mountOptions: ["nfsvers=4.1"]
+  nfs:
+    server: __NFS_SERVER__
+    path: __NFS_PATH__/wp-content
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: wp-backups-pv
+  labels:
+    app.kubernetes.io/part-of: wordpress-k8s
+    volume: backups
+spec:
+  capacity:
+    storage: 5Gi
+  accessModes: ["ReadWriteOnce"]
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: nfs-static
+  mountOptions: ["nfsvers=4.1"]
+  nfs:
+    server: __NFS_SERVER__
+    path: __NFS_PATH__/backups
