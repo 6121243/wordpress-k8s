@@ -1,0 +1,62 @@
+# Base de données MySQL : 1 réplique, données sur la PVC mysql-data.
+# Stratégie Recreate : jamais deux pods MySQL sur le même dossier de données.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysql
+  labels:
+    app: mysql
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: mysql
+  template:
+    metadata:
+      labels:
+        app: mysql
+    spec:
+      containers:
+        - name: mysql
+          image: mysql:8.0
+          ports:
+            - containerPort: 3306
+              name: mysql
+          # Identifiants lus dans le Secret (jamais écrits dans le dépôt)
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef: {name: wordpress-db, key: MYSQL_ROOT_PASSWORD}
+            - name: MYSQL_DATABASE
+              valueFrom:
+                secretKeyRef: {name: wordpress-db, key: MYSQL_DATABASE}
+            - name: MYSQL_USER
+              valueFrom:
+                secretKeyRef: {name: wordpress-db, key: MYSQL_USER}
+            - name: MYSQL_PASSWORD
+              valueFrom:
+                secretKeyRef: {name: wordpress-db, key: MYSQL_PASSWORD}
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/mysql
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: mysql-data
+---
+# Service interne (ClusterIP) : la base n'est PAS exposée hors du cluster.
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql
+  labels:
+    app: mysql
+spec:
+  type: ClusterIP
+  selector:
+    app: mysql
+  ports:
+    - port: 3306
+      targetPort: 3306

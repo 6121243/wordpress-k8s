@@ -1,0 +1,13 @@
+# Partie 1 : déploiement de base.  kubectl apply -k k8s/base
+# Le namespace, les PV (objets de niveau cluster) et le Secret sont créés
+# par scripts/deploy.sh : utilisez ce script plutôt que kubectl apply -k seul.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: wordpress
+labels:
+  - pairs:
+      app.kubernetes.io/part-of: wordpress-k8s
+resources:
+  - pvc.yaml
+  - mysql.yaml
+  - wordpress.yaml

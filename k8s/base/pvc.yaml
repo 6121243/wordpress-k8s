@@ -1,0 +1,28 @@
+# Demandes de volume : chaque PVC se lie (Bound) au PV portant le bon label.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mysql-data
+spec:
+  storageClassName: nfs-static
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: 5Gi
+  selector:
+    matchLabels:
+      volume: mysql
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: wp-content
+spec:
+  storageClassName: nfs-static
+  accessModes: ["ReadWriteMany"]
+  resources:
+    requests:
+      storage: 5Gi
+  selector:
+    matchLabels:
+      volume: wp-content
