@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wordpress
+spec:
+  replicas: 2
+  # Mise à jour sans coupure : un nouveau pod doit être prêt avant d'en retirer un ancien
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  revisionHistoryLimit: 5
+  template:
+    spec:
+      # Répartir les répliques sur des workers différents (résiste à la panne d'un nœud)
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                topologyKey: kubernetes.io/hostname
+                labelSelector:
+                  matchLabels:
+                    app: wordpress
+      containers:
+        - name: wordpress
+          resources:
+            requests: {cpu: 100m, memory: 128Mi}
+            limits: {cpu: 500m, memory: 512Mi}
+          # readiness : le pod ne reçoit du trafic que s'il répond (200/30x)
+          readinessProbe:
+            httpGet: {path: /wp-login.php, port: 80}
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            failureThreshold: 3
+          # liveness : le pod est redémarré s'il ne répond plus
+          livenessProbe:
+            tcpSocket: {port: 80}
+            initialDelaySeconds: 60
+            periodSeconds: 20
+            failureThreshold: 3
+          securityContext:
+            allowPrivilegeEscalation: false
+          lifecycle:
+            preStop:
+              exec:
+                command: ["sleep", "10"]

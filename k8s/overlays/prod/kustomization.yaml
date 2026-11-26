@@ -1,0 +1,21 @@
+# PARTIE 2 — version durcie : réutilise la base (partie 1) et ajoute
+#  - fiabilité   : 2 répliques WordPress, sondes, mises à jour progressives, limites
+#  - sécurité    : NetworkPolicy (MySQL joignable seulement par WordPress), securityContext
+#  - sauvegardes : CronJob mysqldump quotidien vers le volume NFS "backups"
+# Déploiement : ./scripts/deploy.sh prod
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: wordpress
+resources:
+  - ../../base
+  - backup-cronjob.yaml
+patches:
+  - path: wordpress-patch.yaml
+  - path: mysql-patch.yaml
+# Version de WordPress pilotée par Git : modifier newTag -> commit -> la CI déploie.
+# Retour arrière : git revert du commit (ou kubectl rollout undo en urgence).
+images:
+  - name: wordpress
+    newTag: 6.6-apache
+  - name: mysql
+    newTag: "8.0"
