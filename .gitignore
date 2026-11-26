@@ -1,0 +1,11 @@
+# Secrets — ne jamais versionner
+.env
+*.env
+!.env.example
+*.kubeconfig
+kubeconfig*
+
+# Fichiers temporaires
+*.swp
+*.bak
+.DS_Store
