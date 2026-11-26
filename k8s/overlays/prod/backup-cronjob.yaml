@@ -1,0 +1,62 @@
+# Sauvegarde quotidienne de la base (02h00), conservée 7 jours sur le volume NFS backups.
+# Déclenchement manuel : kubectl -n wordpress create job --from=cronjob/mysql-backup backup-manuel
+# Restauration         : ./scripts/restore-db.sh <fichier.sql.gz>
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mysql-backups
+spec:
+  storageClassName: nfs-static
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: 5Gi
+  selector:
+    matchLabels:
+      volume: backups
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: mysql-backup
+spec:
+  schedule: "0 2 * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      template:
+        metadata:
+          labels:
+            app: mysql-backup
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: backup
+              image: mysql:8.0
+              command:
+                - sh
+                - -c
+                - |
+                  set -e
+                  F=/backup/wordpress-$(date +%Y%m%d-%H%M%S).sql.gz
+                  mysqldump -h mysql -uroot -p"$MYSQL_ROOT_PASSWORD" \
+                    --single-transaction --databases "$MYSQL_DATABASE" | gzip > "$F"
+                  echo "Sauvegarde créée : $F ($(du -h "$F" | cut -f1))"
+                  find /backup -name 'wordpress-*.sql.gz' -mtime +7 -delete
+              env:
+                - name: MYSQL_ROOT_PASSWORD
+                  valueFrom:
+                    secretKeyRef: {name: wordpress-db, key: MYSQL_ROOT_PASSWORD}
+                - name: MYSQL_DATABASE
+                  valueFrom:
+                    secretKeyRef: {name: wordpress-db, key: MYSQL_DATABASE}
+              volumeMounts:
+                - name: backups
+                  mountPath: /backup
+          volumes:
+            - name: backups
+              persistentVolumeClaim:
+                claimName: mysql-backups
