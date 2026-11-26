@@ -1,0 +1,53 @@
+=== Test 8 : Repartir de zéro puis rejouer la procédure
+=== 2026-11-26 18:13:47 UTC — test@k8smaster
+
+[1;34m[INFO][0m Suppression du namespace wordpress (pods, services, PVC, secret)
+namespace "wordpress" deleted
+[1;34m[INFO][0m Suppression des PersistentVolumes
+persistentvolume "wp-backups-pv" deleted
+persistentvolume "wp-content-pv" deleted
+persistentvolume "wp-mysql-pv" deleted
+[1;34m[INFO][0m Données conservées dans /srv/nfs/wordpress (reclaimPolicy: Retain)
+[1;32m[ OK ][0m Application supprimée. Pour redéployer : ./scripts/deploy.sh
+Error from server (NotFound): namespaces "wordpress" not found
+Site après suppression : HTTP 000
+[1;34m[INFO][0m 1/5 Namespace
+namespace/wordpress created
+[1;34m[INFO][0m 2/5 Volumes persistants NFS (10.30.20.10:/srv/nfs/wordpress)
+persistentvolume/wp-mysql-pv created
+persistentvolume/wp-content-pv created
+persistentvolume/wp-backups-pv created
+[1;34m[INFO][0m 3/5 Secret (créé depuis .env, jamais stocké dans Git)
+secret/wordpress-db created
+[1;34m[INFO][0m 4/5 Application (base)
+service/mysql created
+service/wordpress created
+persistentvolumeclaim/mysql-data created
+persistentvolumeclaim/wp-content created
+deployment.apps/mysql created
+deployment.apps/wordpress created
+[1;34m[INFO][0m 5/5 Attente de la disponibilité
+Waiting for deployment "mysql" rollout to finish: 0 out of 1 new replicas have been updated...
+Waiting for deployment "mysql" rollout to finish: 0 of 1 updated replicas are available...
+deployment "mysql" successfully rolled out
+Waiting for deployment "wordpress" rollout to finish: 0 of 1 updated replicas are available...
+deployment "wordpress" successfully rolled out
+
+NAME                            READY   STATUS    RESTARTS   AGE   IP               NODE         NOMINATED NODE   READINESS GATES
+pod/mysql-8c887c697-cdq8g       1/1     Running   0          30s   10.244.8.5       k8sworker2   <none>           <none>
+pod/wordpress-bf89954c6-w8d7j   1/1     Running   0          30s   10.244.230.196   k8sworker1   <none>           <none>
+
+NAME                TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)        AGE   SELECTOR
+service/mysql       ClusterIP   10.109.231.215   <none>        3306/TCP       30s   app=mysql
+service/wordpress   NodePort    10.105.174.179   <none>        80:30080/TCP   30s   app=wordpress
+
+NAME                               STATUS   VOLUME          CAPACITY   ACCESS MODES   STORAGECLASS   VOLUMEATTRIBUTESCLASS   AGE   VOLUMEMODE
+persistentvolumeclaim/mysql-data   Bound    wp-mysql-pv     5Gi        RWO            nfs-static     <unset>                 30s   Filesystem
+persistentvolumeclaim/wp-content   Bound    wp-content-pv   5Gi        RWX            nfs-static     <unset>                 30s   Filesystem
+
+[1;32m[ OK ][0m WordPress est accessible depuis l'extérieur :
+    http://10.30.20.10:30080
+    http://10.30.20.21:30080
+    http://10.30.20.22:30080
+    http://wordpress.local:30080  (après ajout dans /etc/hosts du poste extérieur)
+HTTP 200 sur http://10.30.20.10:30080
